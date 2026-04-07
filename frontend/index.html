@@ -4,68 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#2d6a4f">
-  <title>🎾 Tennis Club — Boutique</title>
+  <title>🎾 Tennis Club — Compta &amp; Snack</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="app">
     <div id="login-screen"></div>
     <div id="main-screen">
-
-      <!-- Header mobile (smartphone uniquement) -->
       <div id="mobile-header">
         <div class="mobile-header-title">🎾 Tennis Club</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <div id="mobile-user" class="mobile-header-user"></div>
+          <div id="mobile-user" style="font-size:12px;opacity:0.7"></div>
           <button id="mobile-logout">Quitter</button>
         </div>
       </div>
-
-      <!-- Sidebar desktop -->
       <aside id="sidebar">
         <div class="sidebar-header">
           <span class="logo">🎾</span>
-          <div>
-            <div class="app-name">Tennis Club</div>
-            <div class="app-sub">Boutique</div>
-          </div>
+          <div><div class="app-name">Tennis Club</div><div class="app-sub">Compta &amp; Snack v2</div></div>
         </div>
         <nav id="nav-menu"></nav>
         <div class="sidebar-footer">
           <div id="user-badge"></div>
-          <button id="logout-btn" class="btn-ghost sm">Déconnexion</button>
+          <button id="logout-btn" class="btn-ghost sm" style="color:#fff;border-color:rgba(255,255,255,0.3);width:100%">Déconnexion</button>
         </div>
       </aside>
-
-      <!-- Contenu principal -->
       <main id="content-area"></main>
-
-      <!-- Barre de navigation mobile (smartphone uniquement) -->
       <nav id="mobile-nav"></nav>
     </div>
   </div>
 
   <div id="toast-container"></div>
   <div id="modal-overlay" class="hidden">
-    <div id="modal-box">
-      <div id="modal-header"></div>
-      <div id="modal-body"></div>
-    </div>
+    <div id="modal-box"><div id="modal-header"></div><div id="modal-body"></div></div>
   </div>
 
   <script src="/js/api.js"></script>
   <script src="/js/ui.js"></script>
   <script src="/js/pages/login.js"></script>
   <script src="/js/pages/dashboard.js"></script>
-  <script src="/js/pages/caisse.js"></script>
   <script src="/js/pages/users.js"></script>
   <script src="/js/pages/products.js"></script>
   <script src="/js/pages/purchases.js"></script>
   <script src="/js/pages/sales.js"></script>
+  <script src="/js/pages/caisse.js"></script>
+  <script src="/js/pages/compta.js"></script>
+  <script src="/js/pages/bilan.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
