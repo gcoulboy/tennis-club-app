@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  tennis-club:
+    build: .
+    container_name: tennis-club-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./frontend:/app/frontend
+      - ./backend:/app/backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=TennisClubRS1221-MonSecret2025!
+      - DB_PATH=/app/data/tennis.db
