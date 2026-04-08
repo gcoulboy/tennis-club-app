@@ -44,6 +44,22 @@ router.put('/tournaments/:id', requireAdmin, (req, res) => {
   res.json(db.get('SELECT * FROM tournaments WHERE id = ?', [req.params.id]));
 });
 
+router.delete('/tournaments/:id', requireAdmin, (req, res) => {
+  const t = db.get('SELECT * FROM tournaments WHERE id = ?', [req.params.id]);
+  if (!t) return res.status(404).json({ error: 'Tournoi introuvable' });
+  try {
+    // Delete all related data
+    db.run('DELETE FROM sales WHERE tournament_id = ?', [req.params.id]);
+    db.run('DELETE FROM inscriptions WHERE tournament_id = ?', [req.params.id]);
+    db.run('DELETE FROM depenses WHERE tournament_id = ?', [req.params.id]);
+    db.run('DELETE FROM dotations WHERE tournament_id = ?', [req.params.id]);
+    db.run('DELETE FROM tournaments WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Tournoi supprimé' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur suppression: ' + err.message });
+  }
+});
+
 // ═══ PURCHASES ═══
 
 router.get('/purchases', (req, res) => {

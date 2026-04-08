@@ -297,8 +297,23 @@ async function showEditTournament(id) {
       </div>
       <div><label class="field-label">Statut</label><select id="m-status" style="width:100%"><option value="ouvert" ${t.status==='ouvert'?'selected':''}>Ouvert</option><option value="clos" ${t.status==='clos'?'selected':''}>Clos</option></select></div>
       <button class="btn btn-primary" onclick="doEditTournament(${id})">Enregistrer</button>
+      <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px">
+        <button class="btn btn-danger" style="width:100%" onclick="doDeleteTournament(${id},'${UI.escHtml(t.name).replace(/'/g,"\\'")}')">🗑️ Supprimer ce tournoi</button>
+        <p style="font-size:11px;color:var(--text-3);margin-top:6px;text-align:center">Supprime le tournoi et toutes ses données (inscriptions, dépenses, dotations, ventes snack)</p>
+      </div>
     </div>
   `);
+}
+
+async function doDeleteTournament(id, name) {
+  if (!UI.confirm('Supprimer le tournoi "' + name + '" et TOUTES ses données (inscriptions, dépenses, dotations, ventes) ?\n\nCette action est irréversible.')) return;
+  try {
+    await API.deleteTournament(id);
+    _comptaTournoi = null;
+    UI.closeModal();
+    UI.toast('Tournoi supprimé');
+    renderCompta();
+  } catch (err) { UI.toast(err.message, 'error'); }
 }
 
 async function doEditTournament(id) {

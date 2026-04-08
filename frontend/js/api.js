@@ -42,6 +42,7 @@ const API = {
   getTournament: (id) => API.req('GET', `/api/tournaments/${id}`),
   createTournament: (d) => API.req('POST', '/api/tournaments', d),
   updateTournament: (id, d) => API.req('PUT', `/api/tournaments/${id}`, d),
+  deleteTournament: (id) => API.req('DELETE', `/api/tournaments/${id}`),
 
   // Purchases & Sales
   getPurchases: (pid) => API.req('GET', `/api/purchases${pid ? '?product_id=' + pid : ''}`),
