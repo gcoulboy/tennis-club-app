@@ -17,6 +17,12 @@ db.init().then(() => {
   app.use('/api/compta',   require('./routes/compta'));
   app.use('/api',          require('./routes/operations'));
 
+  // Global error handler
+  app.use((err, req, res, next) => {
+    console.error('❌ Erreur non gérée:', err);
+    res.status(500).json({ error: err.message || 'Erreur interne du serveur' });
+  });
+
   // Serve frontend
   const frontendPath = path.join(__dirname, 'frontend');
   app.use(express.static(frontendPath));

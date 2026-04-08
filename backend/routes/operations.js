@@ -62,15 +62,16 @@ router.post('/purchases', requireAdmin, (req, res) => {
   const p = db.get('SELECT * FROM products WHERE id = ?', [product_id]);
   if (!p) return res.status(404).json({ error: 'Produit introuvable' });
 
-  const doInsert = db.transaction(() => {
+  try {
     const r = db.run('INSERT INTO purchases (product_id,user_id,qty,unit_cost,supplier,notes) VALUES (?,?,?,?,?,?)',
       [product_id, req.user.id, parseInt(qty), parseFloat(unit_cost), supplier || null, notes || null]);
     db.run('UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?', [parseInt(qty), product_id]);
-    return r.lastInsertRowid;
-  });
-  const id = doInsert();
+    const id = r.lastInsertRowid;
 
-  res.status(201).json(db.get(`SELECT p.*, pr.name as product_name FROM purchases p JOIN products pr ON pr.id=p.product_id WHERE p.id = ?`, [id]));
+    res.status(201).json(db.get(`SELECT p.*, pr.name as product_name FROM purchases p JOIN products pr ON pr.id=p.product_id WHERE p.id = ?`, [id]));
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur achat: ' + err.message });
+  }
 });
 
 // ═══ SALES ═══
@@ -92,16 +93,17 @@ router.post('/sales', (req, res) => {
   if (!p) return res.status(404).json({ error: 'Produit introuvable' });
   if (p.stock_qty < parseInt(qty)) return res.status(400).json({ error: `Stock insuffisant (reste: ${p.stock_qty})` });
 
-  const doSale = db.transaction(() => {
+  try {
     const r = db.run('INSERT INTO sales (tournament_id,product_id,user_id,qty,unit_price,payment_method) VALUES (?,?,?,?,?,?)',
       [tournament_id, product_id, req.user.id, parseInt(qty), p.unit_price, payment_method || 'especes']);
     db.run('UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?', [parseInt(qty), product_id]);
-    return r.lastInsertRowid;
-  });
-  const id = doSale();
+    const id = r.lastInsertRowid;
 
-  res.status(201).json(db.get(`SELECT s.*, pr.name as product_name, pr.stock_qty as remaining_stock
-    FROM sales s JOIN products pr ON pr.id=s.product_id WHERE s.id = ?`, [id]));
+    res.status(201).json(db.get(`SELECT s.*, pr.name as product_name, pr.stock_qty as remaining_stock
+      FROM sales s JOIN products pr ON pr.id=s.product_id WHERE s.id = ?`, [id]));
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur vente: ' + err.message });
+  }
 });
 
 // ═══ DASHBOARD ═══

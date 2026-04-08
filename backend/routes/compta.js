@@ -78,16 +78,19 @@ router.get('/dotations', (req, res) => {
 router.post('/dotations/batch', requireAdmin, (req, res) => {
   const { tournament_id, dotations } = req.body;
   if (!tournament_id || !dotations) return res.status(400).json({ error: 'Champs requis' });
-  // Replace all dotations for this tournament
-  const doBatch = db.transaction(() => {
+  try {
+    // Delete existing dotations for this tournament
     db.run('DELETE FROM dotations WHERE tournament_id = ?', [tournament_id]);
+    // Insert new ones
     for (const d of dotations) {
       db.run('INSERT INTO dotations (tournament_id,category,nom_joueur,montant) VALUES (?,?,?,?)',
         [tournament_id, d.category, d.nom_joueur || '', parseFloat(d.montant) || 0]);
     }
-  });
-  doBatch();
-  res.json(db.all('SELECT * FROM dotations WHERE tournament_id = ?', [tournament_id]));
+    res.json(db.all('SELECT * FROM dotations WHERE tournament_id = ?', [tournament_id]));
+  } catch (err) {
+    console.error('Erreur sauvegarde dotations:', err);
+    res.status(500).json({ error: 'Erreur lors de la sauvegarde: ' + err.message });
+  }
 });
 
 // ═══ BILAN COMPLET D'UN TOURNOI ═══
