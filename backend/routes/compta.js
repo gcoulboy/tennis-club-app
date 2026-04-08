@@ -86,13 +86,13 @@ router.post('/inscriptions/import', requireAdmin, (req, res) => {
         } else {
           // Insert new
           db.run('INSERT INTO inscriptions (tournament_id,nom,prenom,montant,mode_paiement,classement,club) VALUES (?,?,?,?,?,?,?)',
-            [tournament_id, nom, prenom, montant, 'Espèce', classement, club]);
+            [tournament_id, nom, prenom, montant, 'Paiement en ligne', classement, club]);
           imported++;
         }
       } else {
         // Replace mode — just insert
         db.run('INSERT INTO inscriptions (tournament_id,nom,prenom,montant,mode_paiement,classement,club) VALUES (?,?,?,?,?,?,?)',
-          [tournament_id, nom, prenom, montant, 'Espèce', classement, club]);
+          [tournament_id, nom, prenom, montant, 'Paiement en ligne', classement, club]);
         imported++;
       }
     }

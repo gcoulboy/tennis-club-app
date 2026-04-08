@@ -81,7 +81,9 @@ async function loadInscriptions() {
           <td style="font-size:12px">${i.classement ? '<span class="badge badge-gold">' + UI.escHtml(i.classement) + '</span>' : '—'}</td>
           <td style="font-size:12px;color:var(--text-3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${UI.escHtml(i.club || '')}">${UI.escHtml(i.club || '—')}</td>
           <td style="font-weight:700;color:${i.montant > 0 ? 'var(--green)' : 'var(--red)'}">${UI.fmt(i.montant)}</td>
-          <td><span class="badge badge-blue">${i.mode_paiement}</span></td>
+          <td><select onchange="quickUpdatePaiement(${i.id},this.value)" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer">
+            ${['Carte bancaire','Espèce','Paiement en ligne','Chèque'].map(m => `<option ${m===i.mode_paiement?'selected':''}>${m}</option>`).join('')}
+          </select></td>
           <td>
             <button class="btn btn-ghost sm" onclick="showEditInscription(${i.id},'${UI.escHtml(i.nom).replace(/'/g,"\\'")}','${UI.escHtml(i.prenom).replace(/'/g,"\\'")}',${i.montant},'${i.mode_paiement}','${UI.escHtml(i.classement || '').replace(/'/g,"\\'")}','${UI.escHtml(i.club || '').replace(/'/g,"\\'")}')">✏️</button>
             <button class="btn sm" style="color:var(--red)" onclick="doDeleteInscription(${i.id})">✕</button>
@@ -245,6 +247,14 @@ async function doEditInscription(id) {
 async function doDeleteInscription(id) {
   if (!UI.confirm('Supprimer ce joueur ?')) return;
   try { await API.deleteInscription(id); UI.toast('Supprimé'); loadInscriptions(); } catch (err) { UI.toast(err.message, 'error'); }
+}
+
+async function quickUpdatePaiement(id, mode) {
+  try {
+    await API.updateInscription(id, { mode_paiement: mode });
+    // Refresh stats without full reload (silent update)
+    loadInscriptions();
+  } catch (err) { UI.toast(err.message, 'error'); }
 }
 
 // ── DEPENSES ──
