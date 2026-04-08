@@ -53,6 +53,7 @@ const API = {
 
   // Compta
   getInscriptions: (tid) => API.req('GET', `/api/compta/inscriptions?tournament_id=${tid}`),
+  importInscriptions: (tid, base64, mode) => API.req('POST', '/api/compta/inscriptions/import', { tournament_id: tid, file_base64: base64, mode }),
   createInscription: (d) => API.req('POST', '/api/compta/inscriptions', d),
   updateInscription: (id, d) => API.req('PUT', `/api/compta/inscriptions/${id}`, d),
   deleteInscription: (id) => API.req('DELETE', `/api/compta/inscriptions/${id}`),

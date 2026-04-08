@@ -154,6 +154,8 @@ async function init() {
       prenom TEXT,
       montant REAL NOT NULL DEFAULT 0,
       mode_paiement TEXT DEFAULT 'Espèce' CHECK(mode_paiement IN ('Carte bancaire', 'Espèce', 'Paiement en ligne', 'Chèque')),
+      classement TEXT,
+      club TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -199,6 +201,8 @@ async function init() {
   try { _db.run("ALTER TABLE tournaments ADD COLUMN juge_arbitre TEXT"); } catch {}
   try { _db.run("ALTER TABLE tournaments ADD COLUMN part_ja REAL DEFAULT 75"); } catch {}
   try { _db.run("ALTER TABLE sales ADD COLUMN payment_method TEXT DEFAULT 'especes'"); } catch {}
+  try { _db.run("ALTER TABLE inscriptions ADD COLUMN classement TEXT"); } catch {}
+  try { _db.run("ALTER TABLE inscriptions ADD COLUMN club TEXT"); } catch {}
 
   _save();
 

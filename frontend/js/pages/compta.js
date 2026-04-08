@@ -58,33 +58,130 @@ async function loadInscriptions() {
   modes.forEach(m => byMode[m] = 0);
   list.forEach(i => byMode[i.mode_paiement] = (byMode[i.mode_paiement] || 0) + i.montant);
   const total = list.reduce((a, i) => a + i.montant, 0);
+  const nbPaye = list.filter(i => i.montant > 0).length;
 
   UI.render('compta-tab-content', `
     <div class="stat-grid">
       ${modes.map(m => `<div class="stat-card"><div class="stat-label">${m}</div><div class="stat-value" style="font-size:18px;color:var(--green)">${UI.fmt(byMode[m])}</div></div>`).join('')}
     </div>
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <strong>Liste des participants (${list.length})</strong>
-        <button class="btn btn-primary sm" onclick="showAddInscription()">+ Joueur</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <strong>Liste des participants (${list.length}) · ${nbPaye} payé${nbPaye > 1 ? 's' : ''}</strong>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-ghost sm" onclick="showImportInscriptions()">📥 Importer XLSX</button>
+          <button class="btn btn-primary sm" onclick="showAddInscription()">+ Joueur</button>
+        </div>
       </div>
-      ${list.length === 0 ? '<p style="color:var(--text-3)">Aucun joueur inscrit</p>' : `
-        <table><thead><tr><th>Nom</th><th>Prénom</th><th>Montant</th><th>Paiement</th><th></th></tr></thead><tbody>
+      ${list.length === 0 ? '<p style="color:var(--text-3)">Aucun joueur inscrit — importez un fichier XLSX ou ajoutez manuellement</p>' : `
+        <div style="overflow-x:auto">
+        <table><thead><tr><th>Nom</th><th>Prénom</th><th>Classement</th><th>Club</th><th>Montant</th><th>Paiement</th><th></th></tr></thead><tbody>
         ${list.map(i => `<tr>
           <td style="font-weight:600">${UI.escHtml(i.nom)}</td>
           <td>${UI.escHtml(i.prenom)}</td>
-          <td style="font-weight:700">${UI.fmt(i.montant)}</td>
+          <td style="font-size:12px">${i.classement ? '<span class="badge badge-gold">' + UI.escHtml(i.classement) + '</span>' : '—'}</td>
+          <td style="font-size:12px;color:var(--text-3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${UI.escHtml(i.club || '')}">${UI.escHtml(i.club || '—')}</td>
+          <td style="font-weight:700;color:${i.montant > 0 ? 'var(--green)' : 'var(--red)'}">${UI.fmt(i.montant)}</td>
           <td><span class="badge badge-blue">${i.mode_paiement}</span></td>
           <td>
-            <button class="btn btn-ghost sm" onclick="showEditInscription(${i.id},'${UI.escHtml(i.nom)}','${UI.escHtml(i.prenom)}',${i.montant},'${i.mode_paiement}')">✏️</button>
+            <button class="btn btn-ghost sm" onclick="showEditInscription(${i.id},'${UI.escHtml(i.nom).replace(/'/g,"\\'")}','${UI.escHtml(i.prenom).replace(/'/g,"\\'")}',${i.montant},'${i.mode_paiement}','${UI.escHtml(i.classement || '').replace(/'/g,"\\'")}','${UI.escHtml(i.club || '').replace(/'/g,"\\'")}')">✏️</button>
             <button class="btn sm" style="color:var(--red)" onclick="doDeleteInscription(${i.id})">✕</button>
           </td>
         </tr>`).join('')}
         </tbody></table>
+        </div>
       `}
       <div class="summary-bar green"><span>Total inscriptions</span><span class="val">${UI.fmt(total)}</span></div>
     </div>
   `);
+}
+
+function showImportInscriptions() {
+  UI.modal('📥 Importer des joueurs (XLSX)', `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <p style="font-size:13px;color:var(--text-2);line-height:1.5">
+        Importez un fichier Excel (.xlsx) avec les colonnes :<br>
+        <strong>Nom, Prénom, Classement, Club, Montant payé</strong> (colonne G)<br>
+        Le fichier exporté depuis votre logiciel FFT est directement compatible.
+      </p>
+      <div>
+        <label class="field-label">Fichier Excel</label>
+        <input type="file" id="m-import-file" accept=".xlsx,.xls" style="width:100%;font-size:14px;padding:10px;border:2px dashed var(--border);border-radius:10px;cursor:pointer">
+      </div>
+      <div>
+        <label class="field-label">Mode d'import</label>
+        <div style="display:flex;gap:8px">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--green);border-radius:10px;cursor:pointer;background:var(--green-bg)">
+            <input type="radio" name="import-mode" value="sync" checked> 
+            <div><strong style="font-size:13px">Synchroniser</strong><br><span style="font-size:11px;color:var(--text-3)">Met à jour les joueurs existants (nom+prénom), ajoute les nouveaux</span></div>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:10px;cursor:pointer">
+            <input type="radio" name="import-mode" value="replace"> 
+            <div><strong style="font-size:13px">Remplacer tout</strong><br><span style="font-size:11px;color:var(--text-3)">Supprime tous les joueurs actuels et réimporte</span></div>
+          </label>
+        </div>
+      </div>
+      <div id="import-preview" style="display:none"></div>
+      <button class="btn btn-primary" style="padding:14px;font-size:15px" onclick="doImportInscriptions()" id="btn-import" disabled>📥 Importer</button>
+    </div>
+  `);
+  // Preview on file select
+  setTimeout(() => {
+    const fileInput = UI.$('m-import-file');
+    if (fileInput) fileInput.addEventListener('change', previewImportFile);
+  }, 50);
+}
+
+function previewImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      // Quick preview using SheetJS in browser (we'll send base64 to server for actual import)
+      const data = new Uint8Array(evt.target.result);
+      // Just show file info
+      const sizeKB = (file.size / 1024).toFixed(1);
+      UI.$('import-preview').style.display = 'block';
+      UI.$('import-preview').innerHTML = `
+        <div style="padding:12px;background:var(--green-bg);border-radius:8px;font-size:13px">
+          ✅ <strong>${UI.escHtml(file.name)}</strong> (${sizeKB} Ko) prêt à importer
+        </div>
+      `;
+      UI.$('btn-import').disabled = false;
+    } catch (err) {
+      UI.$('import-preview').style.display = 'block';
+      UI.$('import-preview').innerHTML = `<div style="padding:12px;background:var(--red-bg);border-radius:8px;font-size:13px;color:var(--red)">❌ Erreur lecture: ${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function doImportInscriptions() {
+  const fileInput = UI.$('m-import-file');
+  const file = fileInput?.files[0];
+  if (!file) { UI.toast('Sélectionnez un fichier', 'error'); return; }
+
+  const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'sync';
+
+  // Read as base64
+  const reader = new FileReader();
+  reader.onload = async function(evt) {
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(evt.target.result)));
+    UI.$('btn-import').disabled = true;
+    UI.$('btn-import').textContent = '⏳ Import en cours...';
+
+    try {
+      const result = await API.importInscriptions(parseInt(_comptaTournoi), base64, mode);
+      UI.closeModal();
+      UI.toast(result.message);
+      loadInscriptions();
+    } catch (err) {
+      UI.toast(err.message, 'error');
+      UI.$('btn-import').disabled = false;
+      UI.$('btn-import').textContent = '📥 Importer';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 function showAddInscription() {
@@ -93,6 +190,10 @@ function showAddInscription() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="field-label">Nom</label><input id="m-nom" style="width:100%"></div>
         <div><label class="field-label">Prénom</label><input id="m-prenom" style="width:100%"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label class="field-label">Classement</label><input id="m-classement" placeholder="ex: 15/2" style="width:100%"></div>
+        <div><label class="field-label">Club</label><input id="m-club" style="width:100%"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="field-label">Montant (€)</label><input type="number" id="m-montant" value="50" style="width:100%"></div>
@@ -107,17 +208,21 @@ function showAddInscription() {
 
 async function doAddInscription() {
   try {
-    await API.createInscription({ tournament_id: parseInt(_comptaTournoi), nom: UI.$('m-nom').value, prenom: UI.$('m-prenom').value, montant: parseFloat(UI.$('m-montant').value), mode_paiement: UI.$('m-mode').value });
+    await API.createInscription({ tournament_id: parseInt(_comptaTournoi), nom: UI.$('m-nom').value, prenom: UI.$('m-prenom').value, montant: parseFloat(UI.$('m-montant').value), mode_paiement: UI.$('m-mode').value, classement: UI.$('m-classement').value || null, club: UI.$('m-club').value || null });
     UI.closeModal(); UI.toast('Joueur ajouté'); loadInscriptions();
   } catch (err) { UI.toast(err.message, 'error'); }
 }
 
-function showEditInscription(id, nom, prenom, montant, mode) {
+function showEditInscription(id, nom, prenom, montant, mode, classement, club) {
   UI.modal('Modifier inscription', `
     <div style="display:flex;flex-direction:column;gap:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="field-label">Nom</label><input id="m-nom" value="${nom}" style="width:100%"></div>
         <div><label class="field-label">Prénom</label><input id="m-prenom" value="${prenom}" style="width:100%"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label class="field-label">Classement</label><input id="m-classement" value="${classement || ''}" style="width:100%"></div>
+        <div><label class="field-label">Club</label><input id="m-club" value="${club || ''}" style="width:100%"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="field-label">Montant (€)</label><input type="number" id="m-montant" value="${montant}" style="width:100%"></div>
