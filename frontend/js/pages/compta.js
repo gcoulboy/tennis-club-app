@@ -311,10 +311,10 @@ async function doDeleteDepense(id) {
 
 // ── DOTATIONS ──
 const DOTATION_CATS = [
-  '1/4 finaliste homme','1/4 finaliste homme','1/4 finaliste homme',
+  '1/4 finaliste homme','1/4 finaliste homme','1/4 finaliste homme','1/4 finaliste homme',
   '1/2 finaliste homme','1/2 finaliste homme',
   'Finaliste homme','Vainqueur homme',
-  '1/4 finaliste femme','1/4 finaliste femme','1/4 finaliste femme',
+  '1/4 finaliste femme','1/4 finaliste femme','1/4 finaliste femme','1/4 finaliste femme',
   '1/2 finaliste femme','1/2 finaliste femme',
   'Finaliste femme','Vainqueur femme'
 ];
