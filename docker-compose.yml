@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   tennis-club:
@@ -9,10 +9,15 @@ services:
       - "3000:3000"
     volumes:
       - ./data:/app/data
-      - ./frontend:/app/frontend
-      - ./backend:/app/backend
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - JWT_SECRET=TennisClubRS1221-MonSecret2025!
+      # ⚠️ CHANGEZ CE SECRET avant de déployer !
+      - JWT_SECRET=CHANGEZ_CE_SECRET_TRES_LONG_ET_ALEATOIRE
       - DB_PATH=/app/data/tennis.db
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

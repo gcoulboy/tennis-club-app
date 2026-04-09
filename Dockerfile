@@ -2,17 +2,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies (sql.js is pure JS/WASM - no native build needed)
 COPY backend/package.json ./
 RUN npm install --production
 
-# Copy backend source
 COPY backend/ ./
-
-# Copy frontend (served as static files by Express)
 COPY frontend/ ./frontend/
 
-# Create data directory for SQLite
 RUN mkdir -p /app/data
 
 EXPOSE 3000
