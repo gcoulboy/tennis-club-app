@@ -51,8 +51,20 @@ async function loadComptaContent() {
 }
 
 // ── INSCRIPTIONS ──
+let _inscriptionsList = [];
+
 async function loadInscriptions() {
-  const list = await API.getInscriptions(_comptaTournoi);
+  _inscriptionsList = await API.getInscriptions(_comptaTournoi);
+  renderInscriptionsTable('');
+}
+
+function renderInscriptionsTable(filter) {
+  const list = _inscriptionsList;
+  const q = (filter || '').toLowerCase().trim();
+  const filtered = q ? list.filter(i =>
+    i.nom.toLowerCase().includes(q) || (i.prenom || '').toLowerCase().includes(q) || (i.club || '').toLowerCase().includes(q) || (i.classement || '').toLowerCase().includes(q)
+  ) : list;
+
   const modes = ['Carte bancaire', 'Espèce', 'Paiement en ligne', 'Chèque'];
   const byMode = {};
   modes.forEach(m => byMode[m] = 0);
@@ -67,15 +79,16 @@ async function loadInscriptions() {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <strong>Liste des participants (${list.length}) · ${nbPaye} payé${nbPaye > 1 ? 's' : ''}</strong>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <input id="inscriptions-search" placeholder="🔍 Rechercher..." value="${UI.escHtml(q)}" oninput="renderInscriptionsTable(this.value)" style="width:160px;font-size:13px;padding:6px 10px">
           <button class="btn btn-ghost sm" onclick="showImportInscriptions()">📥 Importer XLSX</button>
           <button class="btn btn-primary sm" onclick="showAddInscription()">+ Joueur</button>
         </div>
       </div>
-      ${list.length === 0 ? '<p style="color:var(--text-3)">Aucun joueur inscrit — importez un fichier XLSX ou ajoutez manuellement</p>' : `
+      ${filtered.length === 0 ? (list.length === 0 ? '<p style="color:var(--text-3)">Aucun joueur inscrit — importez un fichier XLSX ou ajoutez manuellement</p>' : '<p style="color:var(--text-3)">Aucun résultat pour "' + UI.escHtml(q) + '"</p>') : `
         <div style="overflow-x:auto">
         <table><thead><tr><th>Nom</th><th>Prénom</th><th>Classement</th><th>Club</th><th>Montant</th><th>Paiement</th><th></th></tr></thead><tbody>
-        ${list.map(i => `<tr>
+        ${filtered.map(i => `<tr>
           <td style="font-weight:600">${UI.escHtml(i.nom)}</td>
           <td>${UI.escHtml(i.prenom)}</td>
           <td style="font-size:12px">${i.classement ? '<span class="badge badge-gold">' + UI.escHtml(i.classement) + '</span>' : '—'}</td>
@@ -91,10 +104,16 @@ async function loadInscriptions() {
         </tr>`).join('')}
         </tbody></table>
         </div>
+        ${q && filtered.length < list.length ? '<p style="font-size:12px;color:var(--text-3);margin-top:8px">' + filtered.length + ' / ' + list.length + ' joueurs affichés</p>' : ''}
       `}
       <div class="summary-bar green"><span>Total inscriptions</span><span class="val">${UI.fmt(total)}</span></div>
     </div>
   `);
+  // Restore focus on search field
+  if (q) {
+    const el = UI.$('inscriptions-search');
+    if (el) { el.focus(); el.setSelectionRange(q.length, q.length); }
+  }
 }
 
 function showImportInscriptions() {
