@@ -63,7 +63,7 @@ router.post('/inscriptions/import', requireAdmin, (req, res) => {
     const existing = db.all('SELECT * FROM inscriptions WHERE tournament_id = ?', [tournament_id]);
 
     for (const row of dataRows) {
-      const nom = String(row[colNom] || '').trim();
+      const nom = String(row[colNom] || '').trim().toUpperCase();
       const prenom = String(row[colPrenom] || '').trim();
       const montant = parseFloat(row[colMontant]) || 0;
       const classement = String(row[colClassement] || '').trim() || null;
